@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}New Ceb{% endblock %}
+
+{% block body %}
+    <h1>Create new Ceb</h1>
+
+    {{ include('ceb/_form.html.twig') }}
+
+    <a href="{{ path('app_ceb_index') }}">back to list</a>
+{% endblock %}

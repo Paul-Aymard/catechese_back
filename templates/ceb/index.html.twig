@@ -1,0 +1,39 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ceb index{% endblock %}
+
+{% block body %}
+    <h1>Ceb index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Nom_ceb</th>
+                <th>Zone</th>
+                <th>Secteur</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for ceb in cebs %}
+            <tr>
+                <td>{{ ceb.id }}</td>
+                <td>{{ ceb.nomCeb }}</td>
+                <td>{{ ceb.zone }}</td>
+                <td>{{ ceb.secteur }}</td>
+                <td>
+                    <a href="{{ path('app_ceb_show', {'id': ceb.id}) }}">show</a>
+                    <a href="{{ path('app_ceb_edit', {'id': ceb.id}) }}">edit</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="5">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_ceb_new') }}">Create new</a>
+{% endblock %}
