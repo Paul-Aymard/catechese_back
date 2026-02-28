@@ -1,38 +1,236 @@
-{% extends 'base.html.twig' %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion — Catéchèse</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cream:     #f8f4ee;
+            --parchment: #ede7d9;
+            --gold:      #b8860b;
+            --gold-l:    #d4a62a;
+            --brown:     #3d2b1f;
+            --muted:     #8a7060;
+            --white:     #ffffff;
+            --danger:    #9b2226;
+            --shadow:    rgba(61,43,31,.15);
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-{% block title %}Log in!{% endblock %}
+        body {
+            font-family: 'Jost', sans-serif;
+            background: var(--brown);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
 
-{% block body %}
-    <form method="post">
-        {% if error %}
-            <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
-        {% endif %}
+        /* Decorative background */
+        body::before {
+            content: '';
+            position: absolute; inset: 0;
+            background:
+                radial-gradient(ellipse 60% 60% at 20% 80%, rgba(184,134,11,.15) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 50% at 80% 20%, rgba(212,166,42,.1) 0%, transparent 50%);
+        }
+        .bg-pattern {
+            position: absolute; inset: 0;
+            background-image: repeating-linear-gradient(
+                45deg,
+                rgba(255,255,255,.015) 0, rgba(255,255,255,.015) 1px,
+                transparent 1px, transparent 50%
+            );
+            background-size: 40px 40px;
+        }
 
-        {% if app.user %}
-            <div class="mb-3">
-                You are logged in as {{ app.user.userIdentifier }}, <a href="{{ logout_path() }}">Logout</a>
-            </div>
-        {% endif %}
+        .login-container {
+            position: relative; z-index: 1;
+            width: 100%; max-width: 420px;
+            padding: 20px;
+        }
 
-        <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
-        <label for="username">Email</label>
-        <input type="email" value="{{ last_username }}" name="_username" id="username" class="form-control" autocomplete="email" required autofocus>
-        <label for="password">Password</label>
-        <input type="password" name="_password" id="password" class="form-control" autocomplete="current-password" required>
-        <input type="hidden" name="_csrf_token" data-controller="csrf-protection" value="{{ csrf_token('authenticate') }}">
+        .login-brand {
+            text-align: center;
+            margin-bottom: 32px;
+            animation: fadeDown .6s ease both;
+        }
+        .login-brand .cross-icon {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 56px; height: 56px;
+            border: 2px solid var(--gold);
+            border-radius: 50%;
+            font-size: 24px;
+            color: var(--gold);
+            margin-bottom: 14px;
+            animation: glow 3s ease-in-out infinite;
+        }
+        @keyframes glow {
+            0%,100% { box-shadow: 0 0 12px rgba(184,134,11,.3); }
+            50%      { box-shadow: 0 0 28px rgba(184,134,11,.6); }
+        }
+        .login-brand h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--cream);
+            line-height: 1.1;
+        }
+        .login-brand p {
+            font-size: 12px;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-top: 6px;
+        }
 
-        {#
-            Uncomment this section and add a remember_me option below your firewall to activate remember me functionality.
-            See https://symfony.com/doc/current/security/remember_me.html
+        .login-card {
+            background: var(--white);
+            border-radius: 8px;
+            padding: 36px;
+            box-shadow: 0 20px 60px var(--shadow), 0 0 0 1px rgba(255,255,255,.05);
+            animation: fadeUp .6s .1s ease both;
+        }
+        .login-card h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 22px;
+            color: var(--brown);
+            margin-bottom: 24px;
+            font-style: italic;
+        }
 
-            <div class="checkbox mb-3">
-                <input type="checkbox" name="_remember_me" id="_remember_me">
-                <label for="_remember_me">Remember me</label>
-            </div>
-        #}
+        .form-group { margin-bottom: 18px; }
+        .form-label {
+            display: block;
+            font-size: 11px;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        .form-control {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1px solid var(--parchment);
+            border-radius: 4px;
+            font-family: 'Jost', sans-serif;
+            font-size: 14px;
+            color: var(--brown);
+            background: var(--cream);
+            transition: all .2s;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--gold);
+            background: var(--white);
+            box-shadow: 0 0 0 3px rgba(184,134,11,.1);
+        }
 
-        <button class="btn btn-lg btn-primary" type="submit">
-            Sign in
-        </button>
-    </form>
-{% endblock %}
+        .form-remember {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 13px; color: var(--muted);
+            margin-bottom: 22px;
+            cursor: pointer;
+        }
+        .form-remember input { accent-color: var(--gold); width: 15px; height: 15px; cursor: pointer; }
+
+        .btn-login {
+            width: 100%;
+            padding: 13px;
+            background: var(--brown);
+            color: var(--cream);
+            border: none; cursor: pointer;
+            font-family: 'Jost', sans-serif;
+            font-size: 14px; font-weight: 500;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            border-radius: 4px;
+            transition: all .2s;
+            position: relative; overflow: hidden;
+        }
+        .btn-login::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(135deg, transparent 40%, rgba(184,134,11,.2));
+            opacity: 0; transition: opacity .3s;
+        }
+        .btn-login:hover { background: var(--gold); }
+        .btn-login:hover::after { opacity: 1; }
+
+        .alert-error {
+            background: #fdf0f0;
+            border: 1px solid #f5c6c7;
+            border-left: 4px solid var(--danger);
+            color: var(--danger);
+            padding: 11px 14px;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: rgba(248,244,238,.4);
+            animation: fadeUp .6s .2s ease both;
+        }
+
+        @keyframes fadeDown { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:none; } }
+        @keyframes fadeUp   { from { opacity:0; transform:translateY(20px);  } to { opacity:1; transform:none; } }
+    </style>
+</head>
+<body>
+    <div class="bg-pattern"></div>
+
+    <div class="login-container">
+        <div class="login-brand">
+            <div class="cross-icon">✝</div>
+            <h1>Catéchèse</h1>
+            <p>Espace d'administration</p>
+        </div>
+
+        <div class="login-card">
+            <h2>Bienvenue</h2>
+
+            {% if error %}
+                <div class="alert-error">
+                    {{ error.messageKey|trans(error.messageData, 'security') }}
+                </div>
+            {% endif %}
+
+            <form method="post">
+                <div class="form-group">
+                    <label class="form-label" for="username">Adresse e-mail</label>
+                    <input class="form-control" type="email" id="username" name="_username"
+                           value="{{ last_username }}" autocomplete="email" autofocus
+                           placeholder="votre@email.fr">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Mot de passe</label>
+                    <input class="form-control" type="password" id="password" name="_password"
+                           autocomplete="current-password" placeholder="••••••••">
+                </div>
+
+                <label class="form-remember">
+                    <input type="checkbox" name="_remember_me">
+                    Se souvenir de moi
+                </label>
+
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+                <button type="submit" class="btn-login">Se connecter</button>
+            </form>
+        </div>
+
+        <p class="login-footer">© {{ "now"|date("Y") }} — Paroisse St Laurent Yopougon Kouté</p>
+    </div>
+</body>
+</html>

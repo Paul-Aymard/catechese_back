@@ -1,19 +1,303 @@
-{% extends 'base.html.twig' %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Créer un compte — Catéchèse</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cream:     #f8f4ee;
+            --parchment: #ede7d9;
+            --gold:      #b8860b;
+            --gold-l:    #d4a62a;
+            --brown:     #3d2b1f;
+            --muted:     #8a7060;
+            --white:     #ffffff;
+            --shadow:    rgba(61,43,31,.15);
+            --danger:    #9b2226;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-{% block title %}Register{% endblock %}
+        body {
+            font-family: 'Jost', sans-serif;
+            background: var(--brown);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
 
-{% block body %}
-    <h1>Register</h1>
+        /* Decorative background */
+        body::before {
+            content: '';
+            position: absolute; inset: 0;
+            background:
+                radial-gradient(ellipse 60% 60% at 20% 80%, rgba(184,134,11,.15) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 50% at 80% 20%, rgba(212,166,42,.1) 0%, transparent 50%);
+        }
+        .bg-pattern {
+            position: absolute; inset: 0;
+            background-image: repeating-linear-gradient(
+                45deg,
+                rgba(255,255,255,.015) 0, rgba(255,255,255,.015) 1px,
+                transparent 1px, transparent 50%
+            );
+            background-size: 40px 40px;
+        }
 
-    {{ form_errors(registrationForm) }}
+        .register-wrapper {
+            position: relative; z-index: 1;
+            width: 100%;
+            max-width: 520px;
+        }
 
-    {{ form_start(registrationForm) }}
-        {{ form_row(registrationForm.email) }}
-        {{ form_row(registrationForm.plainPassword, {
-            label: 'Password'
-        }) }}
-        {{ form_row(registrationForm.agreeTerms) }}
+        /* ── Header ── */
+        .register-header {
+            text-align: center;
+            margin-bottom: 32px;
+            animation: fadeDown .6s ease both;
+        }
+        .register-header .cross {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 56px; height: 56px;
+            border: 2px solid var(--gold);
+            border-radius: 50%;
+            font-size: 24px;
+            color: var(--gold);
+            margin-bottom: 14px;
+            animation: glow 3s ease-in-out infinite;
+        }
+        @keyframes glow {
+            0%,100% { box-shadow: 0 0 12px rgba(184,134,11,.3); }
+            50%      { box-shadow: 0 0 28px rgba(184,134,11,.6); }
+        }
+        .register-header h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--cream);
+            line-height: 1.2;
+        }
+        .register-header p {
+            font-size: 12px;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-top: 6px;
+        }
 
-        <button type="submit" class="btn">Register</button>
-    {{ form_end(registrationForm) }}
-{% endblock %}
+        /* ── Card ── */
+        .register-card {
+            background: var(--white);
+            border-radius: 8px;
+            box-shadow: 0 20px 60px var(--shadow), 0 0 0 1px rgba(255,255,255,.05);
+            padding: 36px 40px;
+            animation: fadeUp .6s .1s ease both;
+        }
+        .register-card h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 22px;
+            color: var(--brown);
+            font-style: italic;
+            margin-bottom: 24px;
+        }
+
+        /* ── Form ── */
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-group { margin-bottom: 20px; }
+        .form-label {
+            display: block;
+            font-size: 11px;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        .form-control {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1px solid var(--parchment);
+            border-radius: 4px;
+            font-family: 'Jost', sans-serif;
+            font-size: 14px;
+            color: var(--brown);
+            background: var(--cream);
+            transition: all .2s;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--gold);
+            background: var(--white);
+            box-shadow: 0 0 0 3px rgba(184,134,11,.1);
+        }
+        .form-control.is-invalid { border-color: var(--danger); }
+        .invalid-feedback { font-size: 12px; color: var(--danger); margin-top: 4px; }
+
+        /* ── Roles ── */
+        .roles-group { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+        .role-option {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 14px;
+            border: 1px solid var(--parchment);
+            border-radius: 4px;
+            cursor: pointer;
+            background: var(--cream);
+            transition: all .2s;
+        }
+        .role-option:has(input:checked) { border-color: var(--gold); background: #fdf9ee; }
+        .role-option:hover { border-color: var(--gold-l); background: #fdf9ee; }
+        .role-option input[type="checkbox"] { accent-color: var(--gold); width: 16px; height: 16px; cursor: pointer; flex-shrink: 0; }
+        .role-option .role-label { font-size: 14px; color: var(--brown); font-weight: 400; flex: 1; }
+        .role-option .role-icon  { font-size: 16px; color: var(--muted); }
+
+        /* ── Terms ── */
+        .terms-row {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 12px 0;
+            border-top: 1px solid var(--parchment);
+            margin-top: 8px;
+        }
+        .terms-row input[type="checkbox"] { accent-color: var(--gold); width: 16px; height: 16px; margin-top: 2px; flex-shrink: 0; cursor: pointer; }
+        .terms-row label { font-size: 13px; color: var(--muted); cursor: pointer; line-height: 1.5; }
+        .terms-row label a { color: var(--gold); text-decoration: none; }
+        .terms-row label a:hover { text-decoration: underline; }
+
+        /* ── Button ── */
+        .btn-register {
+            width: 100%;
+            padding: 13px;
+            background: var(--brown);
+            color: var(--cream);
+            border: none; cursor: pointer;
+            font-family: 'Jost', sans-serif;
+            font-size: 14px; font-weight: 500;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            border-radius: 4px;
+            transition: all .2s;
+            margin-top: 8px;
+            position: relative; overflow: hidden;
+        }
+        .btn-register::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(135deg, transparent 40%, rgba(184,134,11,.2));
+            opacity: 0; transition: opacity .3s;
+        }
+        .btn-register:hover { background: var(--gold); }
+        .btn-register:hover::after { opacity: 1; }
+
+        /* ── Footer links ── */
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: rgba(248,244,238,.4);
+            animation: fadeUp .6s .2s ease both;
+        }
+        .login-link a { color: var(--gold-l); text-decoration: none; font-weight: 500; }
+        .login-link a:hover { text-decoration: underline; }
+
+        @keyframes fadeDown { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:none; } }
+        @keyframes fadeUp   { from { opacity:0; transform:translateY(20px);  } to { opacity:1; transform:none; } }
+    </style>
+</head>
+<body>
+<div class="bg-pattern"></div>
+
+<div class="register-wrapper">
+
+    <div class="register-header">
+        <div class="cross">✝</div>
+        <h1>Créer un compte</h1>
+        <p>Espace de gestion — Catéchèse</p>
+    </div>
+
+    <div class="register-card">
+        <h2>Bienvenue</h2>
+
+        {{ form_start(registrationForm, {'attr': {'novalidate': 'novalidate'}}) }}
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label" for="{{ registrationForm.nom.vars.id }}">Nom</label>
+                {{ form_widget(registrationForm.nom, {'attr': {'class': 'form-control' ~ (registrationForm.nom.vars.errors|length > 0 ? ' is-invalid' : ''), 'placeholder': 'Dupont'}}) }}
+                {% if registrationForm.nom.vars.errors|length > 0 %}
+                    <div class="invalid-feedback">{% for error in registrationForm.nom.vars.errors %}{{ error.message }}{% endfor %}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="{{ registrationForm.prenom.vars.id }}">Prénom</label>
+                {{ form_widget(registrationForm.prenom, {'attr': {'class': 'form-control' ~ (registrationForm.prenom.vars.errors|length > 0 ? ' is-invalid' : ''), 'placeholder': 'Marie'}}) }}
+                {% if registrationForm.prenom.vars.errors|length > 0 %}
+                    <div class="invalid-feedback">{% for error in registrationForm.prenom.vars.errors %}{{ error.message }}{% endfor %}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="{{ registrationForm.email.vars.id }}">Adresse e-mail</label>
+            {{ form_widget(registrationForm.email, {'attr': {'class': 'form-control' ~ (registrationForm.email.vars.errors|length > 0 ? ' is-invalid' : ''), 'placeholder': 'marie.dupont@paroisse.fr'}}) }}
+            {% if registrationForm.email.vars.errors|length > 0 %}
+                <div class="invalid-feedback">{% for error in registrationForm.email.vars.errors %}{{ error.message }}{% endfor %}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="{{ registrationForm.plainPassword.vars.id }}">Mot de passe</label>
+            {{ form_widget(registrationForm.plainPassword, {'attr': {'class': 'form-control' ~ (registrationForm.plainPassword.vars.errors|length > 0 ? ' is-invalid' : ''), 'placeholder': '••••••••'}}) }}
+            {% if registrationForm.plainPassword.vars.errors|length > 0 %}
+                <div class="invalid-feedback">{% for error in registrationForm.plainPassword.vars.errors %}{{ error.message }}{% endfor %}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <span class="form-label">Rôle</span>
+            <div class="roles-group">
+                {% for child in registrationForm.roles %}
+                    <label class="role-option">
+                        {{ form_widget(child) }}
+                        <span class="role-label">{{ child.vars.label }}</span>
+                        <span class="role-icon">
+                            {% if child.vars.value == 'ROLE_ADMINISTRATEUR' %}⊙
+                            {% elseif child.vars.value == 'ROLE_CATECHISTE' %}✿
+                            {% else %}✦{% endif %}
+                        </span>
+                    </label>
+                {% endfor %}
+            </div>
+            {% if registrationForm.roles.vars.errors|length > 0 %}
+                <div class="invalid-feedback">{% for error in registrationForm.roles.vars.errors %}{{ error.message }}{% endfor %}</div>
+            {% endif %}
+        </div>
+
+        <div class="terms-row">
+            {{ form_widget(registrationForm.agreeTerms) }}
+            <label for="{{ registrationForm.agreeTerms.vars.id }}">
+                J'accepte les <a href="#">conditions d'utilisation</a> de l'espace de gestion catéchèse
+            </label>
+        </div>
+        {% if registrationForm.agreeTerms.vars.errors|length > 0 %}
+            <div class="invalid-feedback" style="margin-bottom: 8px;">{% for error in registrationForm.agreeTerms.vars.errors %}{{ error.message }}{% endfor %}</div>
+        {% endif %}
+
+        <button type="submit" class="btn-register">✝ &nbsp;Créer le compte</button>
+
+        {{ form_end(registrationForm) }}
+    </div>
+
+    <div class="login-link">
+        Déjà un compte ? <a href="{{ path('app_login') }}">Se connecter</a>
+    </div>
+
+</div>
+</body>
+</html>

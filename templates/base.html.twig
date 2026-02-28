@@ -1,17 +1,568 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>{% block title %}Welcome!{% endblock %}</title>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
-        {% block stylesheets %}
-        {% endblock %}
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Catéchèse{% endblock %} — Paroisse</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cream:      #f8f4ee;
+            --parchment:  #ede7d9;
+            --gold:       #b8860b;
+            --gold-light: #d4a62a;
+            --brown:      #3d2b1f;
+            --brown-mid:  #6b4c35;
+            --text:       #2c1f14;
+            --muted:      #8a7060;
+            --white:      #ffffff;
+            --shadow:     rgba(61,43,31,.12);
+            --danger:     #9b2226;
+            --success:    #3a6b35;
+            --sidebar-w:  260px;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        {% block javascripts %}
-            {% block importmap %}{{ importmap('app') }}{% endblock %}
+        body {
+            font-family: 'Jost', sans-serif;
+            background: var(--cream);
+            color: var(--text);
+            font-size: 15px;
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            width: var(--sidebar-w);
+            min-height: 100vh;
+            background: var(--brown);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0; left: 0;
+            z-index: 100;
+            box-shadow: 4px 0 20px var(--shadow);
+        }
+        .sidebar-logo {
+            padding: 32px 24px 24px;
+            border-bottom: 1px solid rgba(255,255,255,.1);
+            text-align: center;
+        }
+        .sidebar-logo .cross { font-size: 28px; color: var(--gold-light); display: block; margin-bottom: 8px; }
+        .sidebar-logo h1 { font-family: 'Cormorant Garamond', serif; font-size: 20px; color: var(--cream); font-weight: 600; line-height: 1.2; }
+        .sidebar-logo p { font-size: 11px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin-top: 4px; }
+
+        .sidebar-user {
+            padding: 16px 20px;
+            display: flex; align-items: center; gap: 10px;
+            border-bottom: 1px solid rgba(255,255,255,.08);
+        }
+        .sidebar-user .avatar {
+            width: 36px; height: 36px;
+            background: var(--gold); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 16px; font-weight: 600; color: var(--brown); flex-shrink: 0;
+        }
+        .sidebar-user .info .name { font-size: 13px; color: var(--cream); font-weight: 500; }
+        .sidebar-user .info .role { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+
+        .sidebar-nav { flex: 1; padding: 16px 0; overflow-y: auto; }
+        .nav-section-label { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); padding: 12px 20px 6px; }
+        .nav-link {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 20px;
+            color: rgba(248,244,238,.7);
+            text-decoration: none; font-size: 14px; font-weight: 400; letter-spacing: .02em;
+            transition: all .2s; border-left: 3px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active { color: var(--gold-light); background: rgba(255,255,255,.05); border-left-color: var(--gold-light); }
+        .nav-link .icon { width: 18px; text-align: center; font-size: 15px; flex-shrink: 0; }
+
+        .sidebar-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,.08); }
+        .sidebar-footer a { display: flex; align-items: center; gap: 8px; color: rgba(248,244,238,.5); font-size: 13px; text-decoration: none; transition: color .2s; }
+        .sidebar-footer a:hover { color: var(--danger); }
+
+        /* ── MAIN ── */
+        .main-wrapper { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+        .topbar {
+            background: var(--white); border-bottom: 1px solid var(--parchment);
+            padding: 0 32px; height: 64px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 50;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+        .topbar-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--brown); }
+        .topbar-actions { display: flex; align-items: center; gap: 12px; }
+
+        /* Flash */
+        .flash-container { padding: 0 32px; margin-top: 16px; }
+        .flash { padding: 12px 18px; border-radius: 4px; font-size: 14px; margin-bottom: 8px; border-left: 4px solid; animation: slideIn .3s ease; }
+        .flash-success { background: #edf7ec; color: var(--success); border-color: var(--success); }
+        .flash-error   { background: #fdf0f0; color: var(--danger);  border-color: var(--danger); }
+        .flash-info    { background: #eef3fc; color: #1e4080;        border-color: #1e4080; }
+        @keyframes slideIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:none; } }
+
+        .content { padding: 28px 32px; flex: 1; }
+
+        /* ── COMPONENTS ── */
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; padding-bottom: 16px; border-bottom: 1px solid var(--parchment); }
+        .page-header h2 { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 600; color: var(--brown); }
+        .page-header p { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+        .card { background: var(--white); border: 1px solid var(--parchment); border-radius: 6px; box-shadow: 0 2px 8px var(--shadow); }
+        .card-header { padding: 16px 20px; border-bottom: 1px solid var(--parchment); font-family: 'Cormorant Garamond', serif; font-size: 17px; font-weight: 600; color: var(--brown); display: flex; align-items: center; justify-content: space-between; }
+        .card-body { padding: 20px; }
+
+        /* Buttons */
+        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border: none; cursor: pointer; font-family: 'Jost', sans-serif; font-size: 13px; font-weight: 500; letter-spacing: .04em; border-radius: 4px; text-decoration: none; transition: all .2s; }
+        .btn-primary   { background: var(--gold);      color: var(--white); }
+        .btn-primary:hover { background: var(--gold-light); }
+        .btn-secondary { background: var(--parchment); color: var(--brown); }
+        .btn-secondary:hover { background: #ddd4c2; }
+        .btn-danger    { background: var(--danger);    color: var(--white); }
+        .btn-danger:hover { background: #7b191c; }
+        .btn-ghost     { background: transparent; color: var(--brown-mid); border: 1px solid var(--parchment); }
+        .btn-ghost:hover { background: var(--parchment); }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+        /* Table */
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        thead th { background: var(--parchment); padding: 10px 14px; text-align: left; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+        tbody tr { border-bottom: 1px solid var(--parchment); transition: background .15s; }
+        tbody tr:hover { background: #faf7f2; }
+        tbody td { padding: 12px 14px; font-size: 14px; }
+        tbody tr:last-child { border-bottom: none; }
+
+        /* Badge */
+        .badge { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; letter-spacing: .04em; }
+        .badge-gold    { background: #fdf3d7; color: #8a6010; }
+        .badge-green   { background: #edf7ec; color: var(--success); }
+        .badge-red     { background: #fdf0f0; color: var(--danger); }
+        .badge-neutral { background: var(--parchment); color: var(--muted); }
+
+        /* Form */
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
+        .form-control { width: 100%; padding: 10px 14px; border: 1px solid var(--parchment); border-radius: 4px; font-family: 'Jost', sans-serif; font-size: 14px; color: var(--text); background: var(--white); transition: border-color .2s; }
+        .form-control:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(184,134,11,.1); }
+        .form-control.is-invalid { border-color: var(--danger); }
+        .form-error { font-size: 12px; color: var(--danger); margin-top: 4px; }
+        select.form-control { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a7060' fill='none' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+
+        /* Stat cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px; }
+        .stat-card { background: var(--white); border: 1px solid var(--parchment); border-radius: 6px; padding: 20px; box-shadow: 0 2px 8px var(--shadow); position: relative; overflow: hidden; }
+        .stat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--gold); }
+        .stat-card .stat-icon { font-size: 24px; margin-bottom: 8px; }
+        .stat-card .stat-value { font-family: 'Cormorant Garamond', serif; font-size: 36px; font-weight: 600; color: var(--brown); line-height: 1; }
+        .stat-card .stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .06em; }
+        .stat-card .stat-trend { font-size: 11px; margin-top: 6px; }
+        .stat-card .stat-trend.up   { color: var(--success); }
+        .stat-card .stat-trend.down { color: var(--danger); }
+
+        /* Breadcrumb */
+        .breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+        .breadcrumb a { color: var(--muted); text-decoration: none; }
+        .breadcrumb a:hover { color: var(--gold); }
+        .breadcrumb span { color: var(--brown); }
+
+        /* ── DASHBOARD SPECIFIC ── */
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+        .three-col { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 24px; }
+
+        /* Progress bar */
+        .progress { height: 6px; background: var(--parchment); border-radius: 3px; overflow: hidden; margin-top: 8px; }
+        .progress-bar { height: 100%; background: var(--gold); border-radius: 3px; transition: width .6s ease; }
+
+        /* Niveau row */
+        .niveau-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--parchment); }
+        .niveau-row:last-child { border-bottom: none; }
+        .niveau-row .niveau-name { flex: 1; font-size: 14px; color: var(--text); }
+        .niveau-row .niveau-count { font-family: 'Cormorant Garamond', serif; font-size: 20px; color: var(--brown); font-weight: 600; min-width: 36px; text-align: right; }
+
+        /* Activity list */
+        .activity-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--parchment); }
+        .activity-item:last-child { border-bottom: none; }
+        .activity-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); margin-top: 5px; flex-shrink: 0; }
+        .activity-dot.green { background: var(--success); }
+        .activity-dot.red   { background: var(--danger); }
+        .activity-text { font-size: 13px; color: var(--text); line-height: 1.5; }
+        .activity-time { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+        /* Calendar mini */
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 12px; }
+        .cal-day-label { font-size: 10px; color: var(--muted); text-align: center; text-transform: uppercase; letter-spacing: .06em; padding: 2px 0; }
+        .cal-day { font-size: 12px; text-align: center; padding: 5px 2px; border-radius: 4px; color: var(--text); }
+        .cal-day.today { background: var(--gold); color: var(--white); font-weight: 600; border-radius: 50%; }
+        .cal-day.has-event { background: #fdf3d7; color: #8a6010; font-weight: 500; }
+        .cal-day.empty { color: transparent; }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .two-col, .three-col { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .main-wrapper { margin-left: 0; }
+        }
+    </style>
+    {% block stylesheets %}{% endblock %}
+</head>
+<body>
+
+{# ── SIDEBAR ── #}
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <span class="cross">✝</span>
+        <h1>Catéchèse</h1>
+        <p>Espace de gestion</p>
+    </div>
+
+    {% if app.user %}
+    <div class="sidebar-user">
+        <div class="avatar">{{ app.user.prenom|first|upper }}</div>
+        <div class="info">
+            <div class="name">{{ app.user.prenom }} {{ app.user.nom|first }}.</div>
+            <div class="role">
+                {% if is_granted('ROLE_ADMIN') %}Administrateur{% else %}Catéchiste{% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <nav class="sidebar-nav">
+        <div class="nav-section-label">Général</div>
+        <a href="{{ path('app_dashboard') }}" class="nav-link {% if app.request.attributes.get('_route') == 'app_dashboard' %}active{% endif %}">
+            <span class="icon">⊞</span> Tableau de bord
+        </a>
+
+        <div class="nav-section-label">Catéchèse</div>
+        <a href="#" class="nav-link">
+            <span class="icon">✦</span> Catéchumènes
+        </a>
+        <a href="#" class="nav-link">
+            <span class="icon">▦</span> Classes
+        </a>
+        <a href="#" class="nav-link">
+            <span class="icon">◈</span> Groupes
+        </a>
+        <a href="#" class="nav-link">
+            <span class="icon">▲</span> Niveaux
+        </a>
+        <a href="#" class="nav-link">
+            <span class="icon">◇</span> Sections
+        </a>
+
+        <div class="nav-section-label">Suivi</div>
+        <a href="#" class="nav-link">
+            <span class="icon">✉</span> Bulletins
+        </a>
+        <a href="#" class="nav-link">
+            <span class="icon">✎</span> Notes
+        </a>
+        <a href="#" class="nav-link">
+            <span class="icon">☷</span> Journal
+        </a>
+        <a href="#" class="nav-link">
+            <span class="icon">◷</span> Jours Catéchèse
+        </a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <a href="{{ path('app_logout') }}">
+            <span>⊗</span> Déconnexion
+        </a>
+    </div>
+</aside>
+
+{# ── MAIN WRAPPER ── #}
+<div class="main-wrapper">
+    <header class="topbar">
+        <div class="topbar-title">{% block topbar_title %}Tableau de bord{% endblock %}</div>
+        <div class="topbar-actions">
+            <span style="font-size:12px;color:var(--muted);">Année pastorale 2024 – 2025</span>
+            {% block topbar_actions %}{% endblock %}
+        </div>
+    </header>
+
+    {% for type, messages in app.flashes %}
+        <div class="flash-container">
+            {% for message in messages %}
+                <div class="flash flash-{{ type }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endfor %}
+
+    <main class="content">
+        {% block body %}
+
+        {# ── Page header ── #}
+        <div class="page-header">
+            <div>
+                <h2>Bienvenue, Marie ✝</h2>
+                <p>Paroisse St Laurent Yopougon Kouté — vue d'ensemble de l'année pastorale</p>
+            </div>
+            <a href="#" class="btn btn-primary">✦ Inscrire un catéchumène</a>
+        </div>
+
+        {# ── Stat cards ── #}
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">✦</div>
+                <div class="stat-value">247</div>
+                <div class="stat-label">Catéchumènes inscrits</div>
+                <div class="stat-trend up">↑ +12 ce mois-ci</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">▦</div>
+                <div class="stat-value">14</div>
+                <div class="stat-label">Classes actives</div>
+                <div class="stat-trend up">↑ 2 nouvelles</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✿</div>
+                <div class="stat-value">9</div>
+                <div class="stat-label">Catéchistes</div>
+                <div class="stat-trend" style="color:var(--muted);">— inchangé</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✉</div>
+                <div class="stat-value">38</div>
+                <div class="stat-label">Bulletins émis</div>
+                <div class="stat-trend down">↓ 6 en attente</div>
+            </div>
+        </div>
+
+        {# ── Row 1 : derniers inscrits + répartition par niveau ── #}
+        <div class="three-col">
+
+            {# Derniers catéchumènes inscrits #}
+            <div class="card">
+                <div class="card-header">
+                    Dernières inscriptions
+                    <a href="#" class="btn btn-ghost btn-sm">Voir tout</a>
+                </div>
+                <div class="card-body" style="padding:0;">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nom & Prénom</th>
+                                    <th>Niveau</th>
+                                    <th>Groupe</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Kouamé</strong> Adjoua</td>
+                                    <td>Première Communion</td>
+                                    <td>Groupe B</td>
+                                    <td><span class="badge badge-green">Actif</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Brou</strong> Emmanuel</td>
+                                    <td>Confirmation</td>
+                                    <td>Groupe A</td>
+                                    <td><span class="badge badge-green">Actif</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Yao</strong> Clarisse</td>
+                                    <td>Éveil à la foi</td>
+                                    <td>Groupe C</td>
+                                    <td><span class="badge badge-neutral">En attente</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Atta</strong> Rodrigue</td>
+                                    <td>Première Communion</td>
+                                    <td>Groupe A</td>
+                                    <td><span class="badge badge-green">Actif</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>N'Guessan</strong> Fatoumata</td>
+                                    <td>Mystagogie</td>
+                                    <td>Groupe D</td>
+                                    <td><span class="badge badge-gold">Avancé</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Koné</strong> Théophile</td>
+                                    <td>Confirmation</td>
+                                    <td>Groupe B</td>
+                                    <td><span class="badge badge-red">Absent</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            {# Répartition par niveau #}
+            <div class="card">
+                <div class="card-header">Répartition par niveau</div>
+                <div class="card-body">
+                    <div class="niveau-row">
+                        <span class="niveau-name">Éveil à la foi</span>
+                        <div style="flex:2;">
+                            <div class="progress"><div class="progress-bar" style="width:45%"></div></div>
+                        </div>
+                        <span class="niveau-count">52</span>
+                    </div>
+                    <div class="niveau-row">
+                        <span class="niveau-name">Première Communion</span>
+                        <div style="flex:2;">
+                            <div class="progress"><div class="progress-bar" style="width:72%"></div></div>
+                        </div>
+                        <span class="niveau-count">84</span>
+                    </div>
+                    <div class="niveau-row">
+                        <span class="niveau-name">Confirmation</span>
+                        <div style="flex:2;">
+                            <div class="progress"><div class="progress-bar" style="width:60%"></div></div>
+                        </div>
+                        <span class="niveau-count">67</span>
+                    </div>
+                    <div class="niveau-row">
+                        <span class="niveau-name">Mystagogie</span>
+                        <div style="flex:2;">
+                            <div class="progress"><div class="progress-bar" style="width:29%"></div></div>
+                        </div>
+                        <span class="niveau-count">44</span>
+                    </div>
+                    <div style="margin-top:16px; padding-top:12px; border-top:1px solid var(--parchment); font-size:13px; color:var(--muted); text-align:right;">
+                        Total : <strong style="color:var(--brown); font-family:'Cormorant Garamond',serif; font-size:18px;">247</strong> catéchumènes
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        {# ── Row 2 : activité récente + prochains jours catéchèse ── #}
+        <div class="two-col">
+
+            {# Activité récente #}
+            <div class="card">
+                <div class="card-header">Activité récente</div>
+                <div class="card-body">
+                    <div class="activity-item">
+                        <div class="activity-dot green"></div>
+                        <div>
+                            <div class="activity-text">Inscription de <strong>Kouamé Adjoua</strong> validée — Groupe B, Première Communion</div>
+                            <div class="activity-time">Aujourd'hui à 09h14</div>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-dot"></div>
+                        <div>
+                            <div class="activity-text">Bulletin trimestriel émis pour le <strong>Groupe A – Confirmation</strong></div>
+                            <div class="activity-time">Hier à 15h30</div>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-dot red"></div>
+                        <div>
+                            <div class="activity-text">3 absences signalées lors du cours du <strong>22 fév. 2025</strong></div>
+                            <div class="activity-time">Il y a 2 jours</div>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-dot green"></div>
+                        <div>
+                            <div class="activity-text">Notes saisies pour <strong>Éveil à la foi – Groupe C</strong> (52 élèves)</div>
+                            <div class="activity-time">Il y a 3 jours</div>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-dot"></div>
+                        <div>
+                            <div class="activity-text">Nouveau catéchiste <strong>Sr. Angèle Kobenan</strong> ajouté au système</div>
+                            <div class="activity-time">Il y a 5 jours</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Prochains jours catéchèse #}
+            <div class="card">
+                <div class="card-header">Prochains cours — Mars 2025</div>
+                <div class="card-body">
+
+                    <div class="cal-grid">
+                        <div class="cal-day-label">L</div>
+                        <div class="cal-day-label">M</div>
+                        <div class="cal-day-label">M</div>
+                        <div class="cal-day-label">J</div>
+                        <div class="cal-day-label">V</div>
+                        <div class="cal-day-label">S</div>
+                        <div class="cal-day-label">D</div>
+
+                        <div class="cal-day empty"></div>
+                        <div class="cal-day empty"></div>
+                        <div class="cal-day empty"></div>
+                        <div class="cal-day empty"></div>
+                        <div class="cal-day empty"></div>
+                        <div class="cal-day has-event">1</div>
+                        <div class="cal-day">2</div>
+                        <div class="cal-day">3</div>
+                        <div class="cal-day">4</div>
+                        <div class="cal-day">5</div>
+                        <div class="cal-day">6</div>
+                        <div class="cal-day">7</div>
+                        <div class="cal-day has-event">8</div>
+                        <div class="cal-day">9</div>
+                        <div class="cal-day">10</div>
+                        <div class="cal-day">11</div>
+                        <div class="cal-day">12</div>
+                        <div class="cal-day">13</div>
+                        <div class="cal-day">14</div>
+                        <div class="cal-day has-event">15</div>
+                        <div class="cal-day">16</div>
+                        <div class="cal-day today">17</div>
+                        <div class="cal-day">18</div>
+                        <div class="cal-day">19</div>
+                        <div class="cal-day">20</div>
+                        <div class="cal-day">21</div>
+                        <div class="cal-day has-event">22</div>
+                        <div class="cal-day">23</div>
+                        <div class="cal-day">24</div>
+                        <div class="cal-day">25</div>
+                        <div class="cal-day">26</div>
+                        <div class="cal-day">27</div>
+                        <div class="cal-day">28</div>
+                        <div class="cal-day has-event">29</div>
+                        <div class="cal-day">30</div>
+                        <div class="cal-day">31</div>
+                    </div>
+
+                    <div style="margin-top:16px; display:flex; flex-direction:column; gap:8px;">
+                        <div style="display:flex; align-items:center; gap:8px; font-size:13px;">
+                            <span style="width:10px;height:10px;border-radius:2px;background:#fdf3d7;border:1px solid #d4a62a;flex-shrink:0;"></span>
+                            <span style="color:var(--muted);">Jour de catéchèse programmé</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; font-size:13px;">
+                            <span style="width:10px;height:10px;border-radius:50%;background:var(--gold);flex-shrink:0;"></span>
+                            <span style="color:var(--muted);">Aujourd'hui</span>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:16px; padding-top:12px; border-top:1px solid var(--parchment);">
+                        <div style="font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px;">Prochain cours</div>
+                        <div style="font-size:14px; color:var(--brown); font-weight:500;">Samedi 22 mars 2025</div>
+                        <div style="font-size:13px; color:var(--muted); margin-top:2px;">Tous groupes — Salle paroissiale, 8h00</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
         {% endblock %}
-    </head>
-    <body>
-        {% block body %}{% endblock %}
-    </body>
+    </main>
+</div>
+
+{% block javascripts %}{% endblock %}
+</body>
 </html>
